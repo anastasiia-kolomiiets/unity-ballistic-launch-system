@@ -49,6 +49,16 @@ public class Launcher : MonoBehaviour
         rb.linearVelocity = velocity;
     }
 
+    public void FireFromUI(Vector3 launcherPos, Vector3 targetPos, float speed)
+    {
+        transform.position = launcherPos;
+        target.position = targetPos;
+
+        launchSpeed = speed;
+
+        Fire();
+    }
+
     // Shooting direction visualisation
     void OnDrawGizmos()
     {
