@@ -1,5 +1,13 @@
 using UnityEngine;
 
+[System.Serializable]
+public struct BallisticAngles
+{
+    public bool success;
+    public float yaw;
+    public float pitch;
+}
+
 public class Launcher : MonoBehaviour
 {
     [Header("References")]
@@ -11,18 +19,12 @@ public class Launcher : MonoBehaviour
     [Header("Settings")]
     public float launchSpeed = 25f;
 
-    void Update()
-    {
-        if (Input.GetKeyDown(KeyCode.Space))
-        {
-            Fire();
-        }
-    }
-
-    public void Fire()
+    public BallisticAngles Fire()
     {
         Vector3 start = firePoint.position;
         Vector3 end = target.position;
+
+        BallisticAngles result = new BallisticAngles { success = false, yaw = 0f, pitch = 0f };
 
         if (!BallisticCalculator.SolveBallisticArc(
             start,
@@ -33,7 +35,7 @@ public class Launcher : MonoBehaviour
             out float pitch))
         {
             Debug.Log("Target is out of reach");
-            return;
+            return result;
         }
 
         // Horizontal rotation of the launcher
@@ -47,16 +49,20 @@ public class Launcher : MonoBehaviour
 
         Vector3 velocity = firePoint.forward * launchSpeed;
         rb.linearVelocity = velocity;
+
+        result.success = true;
+        result.yaw = yaw;
+        result.pitch = pitch;
+        return result;
     }
 
-    public void FireFromUI(Vector3 launcherPos, Vector3 targetPos, float speed)
+    public BallisticAngles FireFromUI(Vector3 launcherPos, Vector3 targetPos, float speed)
     {
         transform.position = launcherPos;
         target.position = targetPos;
-
         launchSpeed = speed;
 
-        Fire();
+        return Fire();
     }
 
     // Shooting direction visualisation

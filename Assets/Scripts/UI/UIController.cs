@@ -17,9 +17,28 @@ public class UIController : MonoBehaviour
 
     [Header("Speed")]
     public Slider speedSlider;
+    public TMP_Text speedValueText;
+
+    [Header("Angle labels")]
+    public TMP_Text yawText;
+    public TMP_Text pitchText;
 
     [Header("Launcher reference")]
     public Launcher launcher;
+
+    void Start()
+    {
+        UpdateSpeedText(speedSlider.value);
+        speedSlider.onValueChanged.AddListener(UpdateSpeedText);
+    }
+
+    void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            Launch();
+        }
+    }
 
     public void Launch()
     {
@@ -36,7 +55,24 @@ public class UIController : MonoBehaviour
         Vector3 launcherPos = new Vector3(lx, ly, lz);
         Vector3 targetPos = new Vector3(tx, ty, tz);
 
-        launcher.FireFromUI(launcherPos, targetPos, speed);
+        BallisticAngles angles = launcher.FireFromUI(launcherPos, targetPos, speed);
+
+        if (angles.success)
+        {
+            if (yawText != null)
+                yawText.text = $"{angles.yaw:F1}°";
+
+            if (pitchText != null)
+                pitchText.text = $"{angles.pitch:F1}°";
+        }
+        else
+        {
+            if (yawText != null)
+                yawText.text = "—";
+
+            if (pitchText != null)
+                pitchText.text = "out of reach";
+        }
     }
 
     private float ParseFloat(string value)
@@ -46,5 +82,10 @@ public class UIController : MonoBehaviour
 
         value = value.Replace(",", ".");
         return float.Parse(value, CultureInfo.InvariantCulture);
+    }
+
+    void UpdateSpeedText(float value)
+    {
+        speedValueText.text = value.ToString("F1") + " m/s";
     }
 }
