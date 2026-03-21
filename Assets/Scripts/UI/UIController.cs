@@ -55,7 +55,7 @@ public class UIController : MonoBehaviour
         Vector3 launcherPos = new Vector3(lx, ly, lz);
         Vector3 targetPos = new Vector3(tx, ty, tz);
 
-        BallisticAngles angles = launcher.FireFromUI(launcherPos, targetPos, speed);
+        BallisticResult angles = launcher.FireFromUI(launcherPos, targetPos, speed);
 
         if (angles.success)
         {
