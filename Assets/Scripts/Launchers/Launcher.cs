@@ -11,6 +11,8 @@ public class Launcher : MonoBehaviour
     [Header("Settings")]
     public float launchSpeed = 25f;
 
+    public Projectile lastProjectile { get; private set; }
+
     public BallisticResult Fire()
     {
         Vector3 start = firePoint.position;
@@ -31,6 +33,7 @@ public class Launcher : MonoBehaviour
         barrelPivot.localRotation = Quaternion.Euler(-result.pitch, 0, 0);
 
         GameObject projectile = Instantiate(projectilePrefab, firePoint.position, firePoint.rotation);
+        lastProjectile = projectile.GetComponent<Projectile>();
         Rigidbody rb = projectile.GetComponent<Rigidbody>();
 
         Vector3 velocity = firePoint.forward * launchSpeed;
@@ -46,6 +49,16 @@ public class Launcher : MonoBehaviour
         launchSpeed = speed;
 
         return Fire();
+    }
+
+    public void ApplySettingsToLastProjectile(bool useDrag, float cd, float massVal, float area)
+    {
+        if (lastProjectile == null) return;
+
+        lastProjectile.useAirDrag = useDrag;
+        lastProjectile.dragCoefficient = cd;
+        lastProjectile.mass = massVal;
+        lastProjectile.crossSectionArea = area;
     }
 
     // Shooting direction visualisation

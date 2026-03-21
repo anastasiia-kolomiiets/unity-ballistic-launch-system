@@ -26,10 +26,27 @@ public class UIController : MonoBehaviour
     [Header("Launcher reference")]
     public Launcher launcher;
 
+    [Header("Air Resistance & Projectile")]
+    public Toggle airResistanceToggle;
+    public TMP_InputField cdInput;
+    public TMP_InputField massInput;
+    public TMP_InputField areaInput;
+
+    [Header("Presets")]
+    public Button presetGrenade;
+    public Button presetMine82;
+    public Button presetMine120;
+    public Button presetSphere;
+
     void Start()
     {
         UpdateSpeedText(speedSlider.value);
         speedSlider.onValueChanged.AddListener(UpdateSpeedText);
+
+        presetGrenade.onClick.AddListener(() => ApplyPreset(0.8f, 1.5f, 0.008f));
+        presetMine82.onClick.AddListener(() => ApplyPreset(0.9f, 3.5f, 0.015f));
+        presetMine120.onClick.AddListener(() => ApplyPreset(0.85f, 16f, 0.028f));
+        presetSphere.onClick.AddListener(() => ApplyPreset(0.47f, 2f, 0.012f));
     }
 
     void Update()
@@ -55,15 +72,22 @@ public class UIController : MonoBehaviour
         Vector3 launcherPos = new Vector3(lx, ly, lz);
         Vector3 targetPos = new Vector3(tx, ty, tz);
 
-        BallisticResult angles = launcher.FireFromUI(launcherPos, targetPos, speed);
+        BallisticResult result = launcher.FireFromUI(launcherPos, targetPos, speed);
 
-        if (angles.success)
+        if (result.success)
         {
             if (yawText != null)
-                yawText.text = $"{angles.yaw:F1}°";
+                yawText.text = $"{result.yaw:F1}°";
 
             if (pitchText != null)
-                pitchText.text = $"{angles.pitch:F1}°";
+                pitchText.text = $"{result.pitch:F1}°";
+
+            launcher.ApplySettingsToLastProjectile(
+                airResistanceToggle.isOn,
+                ParseFloat(cdInput.text),
+                ParseFloat(massInput.text),
+                ParseFloat(areaInput.text)
+            );
         }
         else
         {
@@ -87,5 +111,12 @@ public class UIController : MonoBehaviour
     void UpdateSpeedText(float value)
     {
         speedValueText.text = value.ToString("F1") + " m/s";
+    }
+
+    private void ApplyPreset(float cd, float massVal, float area)
+    {
+        cdInput.text = cd.ToString("F2");
+        massInput.text = massVal.ToString("F1");
+        areaInput.text = area.ToString("F3");
     }
 }
