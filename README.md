@@ -56,10 +56,8 @@ text---
 ### Steps
 
 1. **Clone the repository**
-
-  ```bash
-    git clone https://github.com/anastasiia-kolomiiets/unity-ballistic-launch-system.git
-
+   ```bash
+   git clone https://github.com/anastasiia-kolomiiets/unity-ballistic-launch-system.git
 2. Open the project in Unity
 - Open Unity Hub
 - Click "Add project from disk"
@@ -86,6 +84,19 @@ text---
 
 - Trajectory prediction line (dashed path or smoke visualization)
 - Still or moving drone simulation
+
+---
+
+## Screenshots
+<div align="center">
+  
+### Main Interface
+<img width="1314" height="880" alt="Знімок екрана 2026-03-26 170756" src="https://github.com/user-attachments/assets/0c458897-12a3-42ec-8811-33f014f73f55" />
+  
+### Explotion effect
+<img width="1314" height="878" alt="Знімок екрана 2026-03-26 170857" src="https://github.com/user-attachments/assets/08075924-fbbd-4615-8399-a91b404c2560" />
+
+</div>
 
 ---
 
