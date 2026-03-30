@@ -29,12 +29,9 @@ public class Launcher : MonoBehaviour
     /// Main fire method. Calculates required angles, rotates launcher & barrel,
     /// spawns projectile and sets its physics properties.
     /// </summary>
-    /// <param name="useAirDrag">Whether to use air resistance in trajectory calculation</param>
-    /// <param name="cd">Drag coefficient (default 0.47 – sphere-like shape)</param>
-    /// <param name="area">Cross-sectional area of projectile (m²)</param>
-    /// <param name="airDensity">Air density (kg/m³), standard = 1.225</param>
-    /// <param name="massVal">Mass of the projectile (kg)</param>
-    /// <returns>BallisticResult with yaw, pitch and success information</returns>
+    /// <param name="end">Coordinates of the target</param>
+    /// <param name="airResistanceSettings">All projectile physics parameters including air resistance, mass, and drag.</param>
+    /// <returns></returns>
     public BallisticResult Fire(Vector3 end, AirResistanceSettings airResistanceSettings)
     {
         Vector3 start = firePoint.position;
