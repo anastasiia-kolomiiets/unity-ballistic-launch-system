@@ -13,9 +13,6 @@ public class Launcher : MonoBehaviour
     [Tooltip("Exact spawn point and initial direction of the projectile")]
     public Transform firePoint;
 
-    [Tooltip("Optional in-scene target transform (used in non-UI mode)")]
-    public Transform target;
-
     [Tooltip("Prefab of the projectile to instantiate")]
     public GameObject projectilePrefab;
 
@@ -38,11 +35,10 @@ public class Launcher : MonoBehaviour
     /// <param name="airDensity">Air density (kg/m³), standard = 1.225</param>
     /// <param name="massVal">Mass of the projectile (kg)</param>
     /// <returns>BallisticResult with yaw, pitch and success information</returns>
-    public BallisticResult Fire(bool useAirDrag, float cd = 0.47f, float area = 0.012f,
+    public BallisticResult Fire(Vector3 end, bool useAirDrag, float cd = 0.47f, float area = 0.012f,
         float airDensity = 1.225f, float massVal = 3.5f)
     {
         Vector3 start = firePoint.position;
-        Vector3 end = target.position;
 
         BallisticResult result;
 
@@ -109,10 +105,9 @@ public class Launcher : MonoBehaviour
     {
         // Update launcher and target transforms for this shot
         transform.position = launcherPos;
-        target.position = targetPos;
         launchSpeed = speed;
 
-        return Fire(useDrag, cd, area, airDensity, massVal);
+        return Fire(targetPos, useDrag, cd, area, airDensity, massVal);
     }
 
     /// <summary>

@@ -31,9 +31,11 @@ public class UIController : MonoBehaviour
     public TMP_Text yawText;
     public TMP_Text pitchText;
 
-    [Header("Launcher Reference")]
+    [Header("References")]
     [Tooltip("Reference to the Launcher component that performs the shot")]
     public Launcher launcher;
+    [Tooltip("Reference to the Target visual component")]
+    public Transform targetVisual;
 
     [Header("Air Resistance & Projectile Settings")]
     [Tooltip("Toggle to enable/disable air drag in calculations and simulation")]
@@ -99,6 +101,9 @@ public class UIController : MonoBehaviour
 
         Vector3 launcherPos = new Vector3(lx, ly, lz);
         Vector3 targetPos = new Vector3(tx, ty, tz);
+
+        if (targetVisual != null) 
+            targetVisual.position = targetPos;
 
         // Call the launcher to perform calculation and fire
         BallisticResult result = launcher.FireFromUI(
