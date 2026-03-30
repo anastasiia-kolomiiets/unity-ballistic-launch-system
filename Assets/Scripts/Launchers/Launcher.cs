@@ -35,23 +35,20 @@ public class Launcher : MonoBehaviour
     /// <param name="airDensity">Air density (kg/m³), standard = 1.225</param>
     /// <param name="massVal">Mass of the projectile (kg)</param>
     /// <returns>BallisticResult with yaw, pitch and success information</returns>
-    public BallisticResult Fire(Vector3 end, bool useAirDrag, float cd = 0.47f, float area = 0.012f,
-        float airDensity = 1.225f, float massVal = 3.5f)
+    public BallisticResult Fire(Vector3 end, AirResistanceSettings airResistanceSettings)
     {
         Vector3 start = firePoint.position;
 
         BallisticResult result;
 
         // Choose calculation method depending on air drag setting
-        if (!useAirDrag)
+        if (!airResistanceSettings.useAirDrag)
         {
             result = BallisticCalculator.SolveBallisticArc(start, end, launchSpeed, Physics.gravity.magnitude);
         }
         else
         {
-            result = BallisticCalculator.SolveBallisticArcWithDrag(
-                start, end, launchSpeed, Physics.gravity.magnitude,
-                cd, area, airDensity, massVal);
+            result = BallisticCalculator.SolveBallisticArcWithDrag(start, end, launchSpeed, Physics.gravity.magnitude, airResistanceSettings);
         }
 
         if (!result.success)
@@ -90,7 +87,7 @@ public class Launcher : MonoBehaviour
 
         // Important: apply drag & mass settings immediately after spawn
         // to prevent wrong gravity behavior in the first physics steps
-        ApplySettingsToLastProjectile(useAirDrag, cd, massVal, area, airDensity);
+        ApplySettingsToLastProjectile(airResistanceSettings);
 
         return result;
     }
@@ -100,29 +97,24 @@ public class Launcher : MonoBehaviour
     /// Updates launcher position, target position and muzzle velocity before firing.
     /// </summary>
     /// <returns>Result of the Fire() call</returns>
-    public BallisticResult FireFromUI(Vector3 launcherPos, Vector3 targetPos, float speed,
-        bool useDrag, float cd, float area, float airDensity, float massVal)
+    public BallisticResult FireFromUI(Vector3 launcherPos, Vector3 targetPos, float speed, AirResistanceSettings airResistanceSettings)
     {
         // Update launcher and target transforms for this shot
         transform.position = launcherPos;
         launchSpeed = speed;
 
-        return Fire(targetPos, useDrag, cd, area, airDensity, massVal);
+        return Fire(targetPos, airResistanceSettings);
     }
 
     /// <summary>
     /// Transfers drag, mass and physics mode settings to the last spawned projectile.
     /// Must be called right after Instantiate to avoid gravity duplication issues.
     /// </summary>
-    public void ApplySettingsToLastProjectile(bool useDrag, float cd, float massVal, float area, float airDensity)
+    public void ApplySettingsToLastProjectile(AirResistanceSettings airResistanceSettings)
     {
         if (lastProjectile == null) return;
 
-        lastProjectile.useAirDrag = useDrag;
-        lastProjectile.dragCoefficient = cd;
-        lastProjectile.crossSectionArea = area;
-        lastProjectile.airDensity = airDensity;
-        lastProjectile.mass = massVal;
+        lastProjectile.airResistanceSettings = airResistanceSettings;
 
         // Apply rigidbody configuration immediately
         lastProjectile.SetupRigidbody();

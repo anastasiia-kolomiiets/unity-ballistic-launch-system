@@ -65,10 +65,7 @@ public static class BallisticCalculator
     /// <param name="target">Target position</param>
     /// <param name="speed">Muzzle velocity (m/s)</param>
     /// <param name="gravity">Gravity magnitude (m/s²)</param>
-    /// <param name="dragCoefficient">Drag coefficient Cd (0.3–1.2 typical)</param>
-    /// <param name="crossSectionArea">Projectile cross-sectional area (m²)</param>
-    /// <param name="airDensity">Air density (kg/m³), default 1.225 at sea level</param>
-    /// <param name="mass">Projectile mass (kg)</param>
+    /// <param name="airResistanceSettings">All projectile physics parameters including air resistance, mass, and drag.</param>
     /// <param name="maxIterations">Maximum secant method iterations</param>
     /// <param name="tolerance">Acceptable vertical error at target distance (meters)</param>
     /// <returns>BallisticResult with computed yaw, pitch and success flag</returns>
@@ -77,10 +74,7 @@ public static class BallisticCalculator
         Vector3 target,
         float speed,
         float gravity,
-        float dragCoefficient,
-        float crossSectionArea,
-        float airDensity = 1.225f,
-        float mass = 3.5f,
+        AirResistanceSettings airResistanceSettings,
         int maxIterations = 35,
         float tolerance = 0.08f)
     {
@@ -117,8 +111,8 @@ public static class BallisticCalculator
 
         for (int i = 0; i < maxIterations; i++)
         {
-            float y0 = SimulateHitHeight(dxz, speed, p0, gravity, dragCoefficient, crossSectionArea, airDensity, mass);
-            float y1 = SimulateHitHeight(dxz, speed, p1, gravity, dragCoefficient, crossSectionArea, airDensity, mass);
+            float y0 = SimulateHitHeight(dxz, speed, p0, gravity, airResistanceSettings);
+            float y1 = SimulateHitHeight(dxz, speed, p1, gravity, airResistanceSettings);
 
             if (y0 < -500f || y1 < -500f) return result; // cannot reach
 
@@ -147,7 +141,7 @@ public static class BallisticCalculator
         }
 
         // Final validation with slightly relaxed tolerance
-        float finalY = SimulateHitHeight(dxz, speed, p1, gravity, dragCoefficient, crossSectionArea, airDensity, mass);
+        float finalY = SimulateHitHeight(dxz, speed, p1, gravity, airResistanceSettings);
         if (Mathf.Abs(finalY - dy) < 2f)
         {
             result.pitch = p1;
@@ -161,8 +155,7 @@ public static class BallisticCalculator
     /// Forward Euler integration of projectile motion with quadratic drag and gravity.
     /// Returns interpolated height when horizontal distance reaches dxz.
     /// </summary>
-    private static float SimulateHitHeight(float dxz, float speed, float pitchDeg, float g,
-        float cd, float area, float rho, float m)
+    private static float SimulateHitHeight(float dxz, float speed, float pitchDeg, float g, AirResistanceSettings airResistanceSettings)
     {
         float pitchRad = pitchDeg * Mathf.Deg2Rad;
         float vx = speed * Mathf.Cos(pitchRad);
@@ -185,9 +178,9 @@ public static class BallisticCalculator
             prevX = x;
             prevY = y;
 
-            float dragMag = 0.5f * rho * cd * area * speedSq;
-            float ax = -(vx / speedCur) * (dragMag / m);
-            float ay = -(vy / speedCur) * (dragMag / m) - g;
+            float dragMag = 0.5f * airResistanceSettings.airDensity * airResistanceSettings.dragCoefficient * airResistanceSettings.crossSectionArea * speedSq;
+            float ax = -(vx / speedCur) * (dragMag / airResistanceSettings.mass);
+            float ay = -(vy / speedCur) * (dragMag / airResistanceSettings.mass) - g;
 
             vx += ax * dt;
             vy += ay * dt;

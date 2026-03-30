@@ -12,20 +12,8 @@ public class Projectile : MonoBehaviour
     public GameObject explosionPrefab;
 
     [Header("Physics Parameters")]
-    [Tooltip("Enable realistic air drag simulation (requires custom force application)")]
-    public bool useAirDrag = false;
-
-    [Tooltip("Drag coefficient Cd – typical values: 0.47 (sphere), 0.8–1.0 (cylinder/projectile)")]
-    public float dragCoefficient = 0.47f;
-
-    [Tooltip("Cross-sectional area of the projectile (m²) – affects drag force")]
-    public float crossSectionArea = 0.012f;
-
-    [Tooltip("Air density (kg/m³) – standard sea level value is 1.225")]
-    public float airDensity = 1.225f;
-
-    [Tooltip("Mass of the projectile (kg) – used in force calculations")]
-    public float mass = 3.5f;
+    [Tooltip("All projectile physics parameters including air resistance, mass, and drag.")]
+    public AirResistanceSettings airResistanceSettings;
 
     private Rigidbody rb;
     private bool hasHit = false; // Prevents multiple explosion triggers
@@ -53,7 +41,7 @@ public class Projectile : MonoBehaviour
         if (rb == null) rb = GetComponent<Rigidbody>();
 
         // Skip if drag is disabled or rigidbody is missing
-        if (!useAirDrag || rb == null) return;
+        if (!airResistanceSettings.useAirDrag || rb == null) return;
 
         // Disable Unity's built-in gravity – we apply it manually to combine with drag
         rb.useGravity = false;
@@ -63,13 +51,13 @@ public class Projectile : MonoBehaviour
         rb.angularDamping = 0f;
 
         // Apply custom mass (important when drag is enabled)
-        rb.mass = mass;
+        rb.mass = airResistanceSettings.mass;
     }
 
     private void FixedUpdate()
     {
         // Skip physics if drag is off, already hit, or rigidbody missing
-        if (!useAirDrag || hasHit || rb == null) return;
+        if (!airResistanceSettings.useAirDrag || hasHit || rb == null) return;
 
         Vector3 velocity = rb.linearVelocity;
         float speed = velocity.magnitude;
@@ -78,7 +66,7 @@ public class Projectile : MonoBehaviour
         if (speed > 0.05f)
         {
             // Quadratic drag force: Fd = ½ ρ Cd A v² (direction opposite to velocity)
-            float dragMagnitude = 0.5f * airDensity * dragCoefficient * crossSectionArea * speed * speed;
+            float dragMagnitude = 0.5f * airResistanceSettings.airDensity * airResistanceSettings.dragCoefficient * airResistanceSettings.crossSectionArea * speed * speed;
             Vector3 dragForce = -velocity.normalized * dragMagnitude;
 
             // Manual gravity force: Fg = m * g

@@ -92,12 +92,14 @@ public class UIController : MonoBehaviour
         float tz = ParseFloat(targetZ.text);
 
         float speed = speedSlider.value;
-        bool useDrag = airResistanceToggle.isOn;
-
-        // Parse projectile parameters
-        float cd = ParseFloat(cdInput.text);
-        float massVal = ParseFloat(massInput.text);
-        float area = ParseFloat(areaInput.text);
+        AirResistanceSettings settings = new AirResistanceSettings
+        {
+            useAirDrag = airResistanceToggle.isOn,
+            dragCoefficient = ParseFloat(cdInput.text),
+            crossSectionArea = ParseFloat(areaInput.text),
+            airDensity = 1.225f,
+            mass = ParseFloat(massInput.text)
+        };
 
         Vector3 launcherPos = new Vector3(lx, ly, lz);
         Vector3 targetPos = new Vector3(tx, ty, tz);
@@ -106,9 +108,7 @@ public class UIController : MonoBehaviour
             targetVisual.position = targetPos;
 
         // Call the launcher to perform calculation and fire
-        BallisticResult result = launcher.FireFromUI(
-            launcherPos, targetPos, speed,
-            useDrag, cd, area, 1.225f, massVal);
+        BallisticResult result = launcher.FireFromUI(launcherPos, targetPos, speed, settings);
 
         // Update UI with results
         if (result.success)
