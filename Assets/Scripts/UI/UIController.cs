@@ -10,10 +10,10 @@ using UnityEngine.UI;
 /// </summary>
 public class UIController : MonoBehaviour
 {
-    [Header("Launcher Position Inputs")]
-    public TMP_InputField launcherX;
-    public TMP_InputField launcherY;
-    public TMP_InputField launcherZ;
+    [Header("Start Position Inputs")]
+    public TMP_InputField startX;
+    public TMP_InputField startY;
+    public TMP_InputField startZ;
 
     [Header("Target Position Inputs")]
     public TMP_InputField targetX;
@@ -27,20 +27,9 @@ public class UIController : MonoBehaviour
     [Tooltip("Text display showing current speed value")]
     public TMP_Text speedValueText;
 
-    [Header("Angle Display")]
-    public TMP_Text yawText;
-    public TMP_Text pitchText;
-
-    [Header("References")]
-    [Tooltip("Reference to the Launcher component that performs the shot")]
-    public Launcher launcher;
-    [Tooltip("Reference to the Target visual component")]
-    public Transform targetVisual;
-
     [Header("Air Resistance & Projectile Settings")]
     [Tooltip("Toggle to enable/disable air drag in calculations and simulation")]
     public Toggle airResistanceToggle;
-
     public TMP_InputField cdInput;       // Drag coefficient
     public TMP_InputField massInput;     // Projectile mass (kg)
     public TMP_InputField areaInput;     // Cross-sectional area (m²)
@@ -50,6 +39,34 @@ public class UIController : MonoBehaviour
     public Button presetMine82;
     public Button presetMine120;
     public Button presetSphere;
+
+    [Header("Results")]
+    // Launcher mode only
+    public GameObject anglesSection;
+    public TMP_Text yawText;
+    public TMP_Text pitchText;
+    // Drone mode only
+    public GameObject releaseSection;
+    public TMP_Text releasePointText;
+    public TMP_Text releaseTimeText;
+
+    [Header("References")]
+    [Tooltip("Reference to the Target visual component")]
+    public Transform targetVisual;
+    [Tooltip("Reference to the Launcher prefab")]
+    public GameObject launcherPrefab;
+    [Tooltip("Reference to the Drone prefab")]
+    public GameObject dronePrefab;
+
+    [Header("Mode Selection")]
+    public TMP_Dropdown modeDropdown;
+    public enum GameMode { Launcher, Drone }
+    private GameMode currentMode = GameMode.Launcher;
+
+    private GameObject currentObject;
+    private Launcher currentLauncher;
+    private Drone currentDrone;
+    
 
     void Start()
     {
@@ -64,6 +81,10 @@ public class UIController : MonoBehaviour
         presetMine82.onClick.AddListener(() => ApplyPreset(0.9f, 3.5f, 0.015f));
         presetMine120.onClick.AddListener(() => ApplyPreset(0.85f, 16f, 0.028f));
         presetSphere.onClick.AddListener(() => ApplyPreset(0.47f, 2f, 0.012f));
+
+        // Subscribe to mode dropdown changes
+        modeDropdown.onValueChanged.AddListener(OnModeChanged);
+        OnModeChanged(0); // initial mode
     }
 
     void Update()
@@ -81,16 +102,8 @@ public class UIController : MonoBehaviour
     /// </summary>
     public void Launch()
     {
-        // Parse launcher coordinates
-        float lx = ParseFloat(launcherX.text);
-        float ly = ParseFloat(launcherY.text);
-        float lz = ParseFloat(launcherZ.text);
-
-        // Parse target coordinates
-        float tx = ParseFloat(targetX.text);
-        float ty = ParseFloat(targetY.text);
-        float tz = ParseFloat(targetZ.text);
-
+        Vector3 startPos = GetStartPosition();
+        Vector3 targetPos = GetTargetPosition();
         float speed = speedSlider.value;
         AirResistanceSettings settings = new AirResistanceSettings
         {
@@ -101,31 +114,30 @@ public class UIController : MonoBehaviour
             mass = ParseFloat(massInput.text)
         };
 
-        Vector3 launcherPos = new Vector3(lx, ly, lz);
-        Vector3 targetPos = new Vector3(tx, ty, tz);
-
         if (targetVisual != null) 
             targetVisual.position = targetPos;
 
-        // Call the launcher to perform calculation and fire
-        BallisticResult result = launcher.FireFromUI(launcherPos, targetPos, speed, settings);
 
-        // Update UI with results
-        if (result.success)
+        if (currentMode == GameMode.Launcher && currentLauncher != null)
         {
-            if (yawText != null)
+            currentLauncher.transform.position = startPos;
+            BallisticResult result = currentLauncher.FireFromUI(startPos, targetPos, speed, settings);
+
+            // Update UI with results
+            if (result.success)
+            {
                 yawText.text = $"{result.yaw:F1}°";
-
-            if (pitchText != null)
                 pitchText.text = $"{result.pitch:F1}°";
-        }
-        else
-        {
-            if (yawText != null)
+            }
+            else
+            {
                 yawText.text = "—";
-
-            if (pitchText != null)
                 pitchText.text = "out of reach";
+            }
+        }
+        else if (currentMode == GameMode.Drone && currentDrone != null)
+        {
+            
         }
     }
 
@@ -146,6 +158,9 @@ public class UIController : MonoBehaviour
         // Parse using invariant culture (always uses . as decimal separator)
         return float.Parse(value, CultureInfo.InvariantCulture);
     }
+
+    private Vector3 GetStartPosition() => new Vector3(ParseFloat(startX.text), ParseFloat(startY.text), ParseFloat(startZ.text));
+    private Vector3 GetTargetPosition() => new Vector3(ParseFloat(targetX.text), ParseFloat(targetY.text), ParseFloat(targetZ.text));
 
     /// <summary>
     /// Updates the speed display text when slider value changes.
@@ -168,5 +183,36 @@ public class UIController : MonoBehaviour
         cdInput.text = cd.ToString("F2");
         massInput.text = massVal.ToString("F1");
         areaInput.text = area.ToString("F3");
+    }
+
+    /// <summary>
+    /// Creates instance of an object and changes UI depending on chosen mode
+    /// </summary>
+    /// <param name="index"></param>
+    private void OnModeChanged(int index)
+    {
+        currentMode = (GameMode)index;
+
+        if (currentObject != null)
+            Destroy(currentObject);
+
+        Vector3 startPos = GetStartPosition();
+
+        if (currentMode == GameMode.Launcher)
+        {
+            currentObject = Instantiate(launcherPrefab, startPos, Quaternion.identity);
+            currentLauncher = currentObject.GetComponent<Launcher>();
+
+            anglesSection.SetActive(true);
+            releaseSection.SetActive(false);
+        }
+        else
+        {
+            currentObject = Instantiate(dronePrefab, startPos, Quaternion.identity);
+            currentDrone = currentObject.GetComponent<Drone>();
+
+            anglesSection.SetActive(true);
+            releaseSection.SetActive(false);
+        }
     }
 }

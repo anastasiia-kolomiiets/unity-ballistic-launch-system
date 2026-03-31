@@ -81,7 +81,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7377337424147735098, guid: 1c4a27719f71c42d5b8548704eabfcc1, type: 3}
       propertyPath: m_Name
-      value: dron_1_body_root Variant
+      value: Drone
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects:
