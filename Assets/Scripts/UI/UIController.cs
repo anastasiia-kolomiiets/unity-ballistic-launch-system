@@ -211,8 +211,8 @@ public class UIController : MonoBehaviour
             currentObject = Instantiate(dronePrefab, startPos, Quaternion.identity);
             currentDrone = currentObject.GetComponent<Drone>();
 
-            anglesSection.SetActive(true);
-            releaseSection.SetActive(false);
+            anglesSection.SetActive(false);
+            releaseSection.SetActive(true);
         }
     }
 }
