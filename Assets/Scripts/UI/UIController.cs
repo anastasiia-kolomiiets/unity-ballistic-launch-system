@@ -137,7 +137,7 @@ public class UIController : MonoBehaviour
         }
         else if (currentMode == GameMode.Drone && currentDrone != null)
         {
-            
+            currentDrone.StartFlight(startPos, targetPos, speed);
         }
     }
 

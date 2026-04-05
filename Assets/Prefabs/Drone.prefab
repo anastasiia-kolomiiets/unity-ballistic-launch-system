@@ -90,8 +90,30 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 7377337424147578388, guid: 1c4a27719f71c42d5b8548704eabfcc1, type: 3}
       insertIndex: -1
       addedObject: {fileID: 7582133055518096324}
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 7377337424147735098, guid: 1c4a27719f71c42d5b8548704eabfcc1, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 3290827056604180669}
   m_SourcePrefab: {fileID: 100100000, guid: 1c4a27719f71c42d5b8548704eabfcc1, type: 3}
+--- !u!1 &900950914629812533 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 7377337424147735098, guid: 1c4a27719f71c42d5b8548704eabfcc1, type: 3}
+  m_PrefabInstance: {fileID: 7701510890265748239}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &3290827056604180669
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 900950914629812533}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 22772beecb5f54eb79da5b2ab050b0c6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Drone
+  flightSpeed: 15
+  arrivalThreshold: 0.5
 --- !u!4 &900950914629983515 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 7377337424147578388, guid: 1c4a27719f71c42d5b8548704eabfcc1, type: 3}

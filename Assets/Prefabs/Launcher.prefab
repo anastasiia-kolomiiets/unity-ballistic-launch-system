@@ -32,6 +32,14 @@ PrefabInstance:
       propertyPath: m_LocalPosition.z
       value: 3
       objectReference: {fileID: 0}
+    - target: {fileID: 4459613001278838, guid: d4af3966dba2cd746ab019083640eb8c, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 0.9555273
+      objectReference: {fileID: 0}
+    - target: {fileID: 4459613001278838, guid: d4af3966dba2cd746ab019083640eb8c, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: -0.29490262
+      objectReference: {fileID: 0}
     - target: {fileID: 4924783946067484, guid: d4af3966dba2cd746ab019083640eb8c, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -108,7 +116,7 @@ MonoBehaviour:
   barrelPivot: {fileID: 8015923433338565859}
   firePoint: {fileID: 8015910813236176441}
   projectilePrefab: {fileID: 1486998320479017607, guid: 3003f7a762295428eac640e538054bff, type: 3}
-  launchSpeed: 25
+  launchSpeed: 16.363636
 --- !u!4 &8015910813236176441 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4411725851834284, guid: d4af3966dba2cd746ab019083640eb8c, type: 3}
