@@ -114,6 +114,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Drone
   flightSpeed: 15
   arrivalThreshold: 0.5
+  firePoint: {fileID: 7582133055518096324}
+  projectilePrefab: {fileID: 1486998320479017607, guid: 3003f7a762295428eac640e538054bff, type: 3}
+  airResistanceSettings:
+    useAirDrag: 0
+    dragCoefficient: 0
+    crossSectionArea: 0
+    airDensity: 0
+    mass: 0
 --- !u!4 &900950914629983515 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 7377337424147578388, guid: 1c4a27719f71c42d5b8548704eabfcc1, type: 3}

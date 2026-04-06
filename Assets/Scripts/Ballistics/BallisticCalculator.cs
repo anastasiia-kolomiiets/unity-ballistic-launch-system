@@ -1,3 +1,4 @@
+using System.Security.Cryptography.X509Certificates;
 using UnityEngine;
 
 /// <summary>
@@ -193,5 +194,90 @@ public static class BallisticCalculator
 
         float frac = (dxz - prevX) / (x - prevX + 0.0001f);
         return prevY + frac * (y - prevY);
+    }
+
+    /// <summary>
+    /// Calculates the optimal release point and time for a drone to drop a payload 
+    /// so that it lands at the target position, taking into account optional air resistance.
+    /// </summary>
+    /// <param name="startPosition">Current position of the drone.</param>
+    /// <param name="targetPosition">Desired landing position of the payload.</param>
+    /// <param name="droneSpeed">Horizontal speed of the drone (m/s).</param>
+    /// <param name="airSettings">Air resistance settings. If air drag is disabled, a simple analytical solution is used.</param>
+    /// <returns>
+    /// A ReleaseResult containing:
+    /// - Success flag
+    /// - Recommended release point (same height as drone)
+    /// - Time (in seconds) for the drone to reach the release point from current position
+    /// </returns>
+    public static ReleaseResult CalculateDroneDrop(
+        Vector3 startPosition,
+        Vector3 targetPosition,
+        float droneSpeed,
+        AirResistanceSettings airSettings)
+    {
+        float height = startPosition.y - targetPosition.y;
+        if (height <= 0.01f)
+            return new ReleaseResult { success = false, releasePoint = startPosition, timeToRelease = 0f };
+
+        Vector3 direction = (targetPosition - startPosition).normalized;
+        direction.y = 0f;
+        if (direction.sqrMagnitude < 0.01f)
+            direction = Vector3.forward;
+
+        Vector3 horizontalVel = direction * droneSpeed;
+
+        Vector3 releasePoint;
+
+        if (!airSettings.useAirDrag)
+        {
+            releasePoint = CalculateDropReleasePoint(startPosition, targetPosition, horizontalVel);
+        }
+        else
+        {
+            // Temporary realization
+            releasePoint = startPosition;
+        }
+
+        Vector3 moveDir = horizontalVel.normalized;
+        Vector3 toRelease = releasePoint - startPosition;
+        toRelease.y = 0f;
+
+        float forwardDistance = Vector3.Dot(toRelease, moveDir);
+
+        if (forwardDistance <= 0f)
+        {
+            return new ReleaseResult { success = false, releasePoint = releasePoint, timeToRelease = 0f };  // if release point is behind the drone, target is out of reach
+        }
+
+        float timeToRelease = forwardDistance / droneSpeed;
+
+        return new ReleaseResult { success = true, releasePoint = releasePoint, timeToRelease = timeToRelease };
+    }
+
+    /// <summary>
+    /// Calculates the release point for dropping a payload using a simple analytical solution 
+    /// (no air resistance / quadratic motion under constant gravity).
+    /// </summary>
+    /// <param name="dronePosition">Position of the drone at the moment of release.</param>
+    /// <param name="targetPosition">Desired landing position of the payload.</param>
+    /// <param name="droneHorizontalVelocity">Horizontal velocity vector of the drone.</param>
+    /// <returns>
+    /// The position where the drone should release the payload.
+    /// </returns>
+    public static Vector3 CalculateDropReleasePoint(
+        Vector3 dronePosition,
+        Vector3 targetPosition,
+        Vector3 droneHorizontalVelocity)
+    {
+        float height = dronePosition.y - targetPosition.y;
+
+        float fallTime = Mathf.Sqrt(2f * height / Mathf.Abs(Physics.gravity.y));
+        Vector3 leadOffset = droneHorizontalVelocity * fallTime;
+
+        Vector3 releasePoint = targetPosition - leadOffset;
+        releasePoint.y = dronePosition.y;
+
+        return releasePoint;
     }
 }

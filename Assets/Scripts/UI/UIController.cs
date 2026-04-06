@@ -137,7 +137,18 @@ public class UIController : MonoBehaviour
         }
         else if (currentMode == GameMode.Drone && currentDrone != null)
         {
-            currentDrone.StartFlight(startPos, targetPos, speed);
+            currentDrone.StartFlight(startPos, targetPos, speed, settings);
+            // Update UI with results
+            if (currentDrone.releaseResult.success)
+            {
+                releasePointText.text = $"{currentDrone.releaseResult.releasePoint:F1}";
+                releaseTimeText.text = $"{currentDrone.releaseResult.timeToRelease:F1}" + " s";
+            }
+            else
+            {
+                releasePointText.text = "—";
+                releaseTimeText.text = "—";
+            }
         }
     }
 
