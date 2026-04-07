@@ -235,8 +235,7 @@ public static class BallisticCalculator
         }
         else
         {
-            // Temporary realization
-            releasePoint = startPosition;
+            releasePoint = CalculateDropReleasePointWithDrag(startPosition, targetPosition, horizontalVel, airSettings);
         }
 
         Vector3 moveDir = horizontalVel.normalized;
@@ -279,5 +278,111 @@ public static class BallisticCalculator
         releasePoint.y = dronePosition.y;
 
         return releasePoint;
+    }
+
+    /// <summary>
+    /// Calculates the release point for dropping a payload taking quadratic air drag into account.
+    /// Uses a single forward Euler simulation to compute the exact horizontal range the bomb will travel.
+    /// No iterative solver (secant method) is needed because the initial velocity and direction are fixed.
+    /// </summary>
+    /// <param name="dronePosition">Current drone position (release height).</param>
+    /// <param name="targetPosition">Desired impact position.</param>
+    /// <param name="droneHorizontalVelocity">Drone's horizontal velocity vector at release.</param>
+    /// <param name="airSettings">Air resistance settings (Cd, mass, area, density).</param>
+    /// <returns>World-space release point at the same height as the drone.</returns>
+    public static Vector3 CalculateDropReleasePointWithDrag(
+        Vector3 dronePosition,
+        Vector3 targetPosition,
+        Vector3 droneHorizontalVelocity,
+        AirResistanceSettings airSettings)
+    {
+        float height = dronePosition.y - targetPosition.y;
+        if (height <= 0.01f)
+            return dronePosition;
+
+        // Horizontal direction and distance to target
+        Vector3 horizDir = (targetPosition - dronePosition);
+        horizDir.y = 0f;
+        float targetRange = horizDir.magnitude;
+
+        if (targetRange < 0.01f)
+            return dronePosition;
+
+        horizDir.Normalize();
+
+        float droneSpeed = droneHorizontalVelocity.magnitude;
+        if (droneSpeed < 0.1f)
+            return dronePosition;
+
+        // Simulate the exact horizontal distance the bomb will travel under drag
+        float actualRange = SimulateBombHorizontalRange(droneSpeed, height, airSettings);
+
+        // Release point is shifted backward by the distance the bomb will actually fly
+        Vector3 releasePoint = targetPosition - horizDir * actualRange;
+        releasePoint.y = dronePosition.y;
+
+        return releasePoint;
+    }
+
+    /// <summary>
+    /// Forward Euler integration that simulates the free-fall of a bomb with quadratic air drag.
+    /// Starts with horizontal velocity only (vy = 0). Returns the total horizontal distance
+    /// traveled until the bomb reaches y = 0.
+    /// </summary>
+    /// <param name="initialHorizontalSpeed">Horizontal speed the bomb receives from the drone.</param>
+    /// <param name="height">Drop height (drone y - target y).</param>
+    /// <param name="airSettings">Air resistance parameters.</param>
+    /// <returns>Horizontal distance (meters) the bomb will travel before hitting ground.</returns>
+    private static float SimulateBombHorizontalRange(
+        float initialHorizontalSpeed,
+        float height,
+        AirResistanceSettings airSettings)
+    {
+        float vx = initialHorizontalSpeed;   // initial horizontal velocity
+        float vy = 0f;                       // initial vertical velocity = 0
+        float x = 0f;
+        float y = height;
+
+        float dt = 0.004f;                   // integration step (high precision)
+        float g = Mathf.Abs(Physics.gravity.y);
+
+        float prevX = 0f;
+        float prevY = height;
+
+        while (y > 0f)
+        {
+            prevX = x;
+            prevY = y;
+
+            float speedSq = vx * vx + vy * vy;
+            if (speedSq < 0.0025f) break;    // velocity is almost zero
+
+            float speed = Mathf.Sqrt(speedSq);
+
+            // Quadratic drag force magnitude
+            float dragMag = 0.5f * airSettings.airDensity *
+                            airSettings.dragCoefficient *
+                            airSettings.crossSectionArea * speedSq;
+
+            // Acceleration components
+            float ax = -(vx / speed) * (dragMag / airSettings.mass);
+            float ay = -(vy / speed) * (dragMag / airSettings.mass) - g;
+
+            // Semi-implicit Euler integration (velocity first, then position)
+            vx += ax * dt;
+            vy += ay * dt;
+
+            x += vx * dt;
+            y += vy * dt;
+        }
+
+        // Linear interpolation for exact y = 0 crossing (sub-step accuracy)
+        if (y < 0f && prevY > 0f)
+        {
+            float frac = prevY / (prevY - y);
+            x = prevX + frac * (x - prevX);
+        }
+
+        return x;
     }
 }
