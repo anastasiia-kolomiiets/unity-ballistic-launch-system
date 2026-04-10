@@ -15,13 +15,26 @@ public class Projectile : MonoBehaviour
     [Tooltip("All projectile physics parameters including air resistance, mass, and drag.")]
     public AirResistanceSettings airResistanceSettings;
 
+    [Header("Trail Settings")]
+    [Tooltip("How many seconds the smoke trail should remain visible and fade after impact")]
+    public float trailCleanupDelay = 4.0f;
+
     private Rigidbody rb;
     private bool hasHit = false; // Prevents multiple explosion triggers
+    private Transform trailObject;  // Reference to SmokeTrail child
 
     private void Awake()
     {
         // Cache rigidbody reference early
         rb = GetComponent<Rigidbody>();
+
+        // Find child object with smoke trail
+        trailObject = transform.Find("SmokeTrail");
+
+        if (trailObject == null)
+        {
+            Debug.LogWarning("SmokeTrail child object not found on projectile!", gameObject);
+        }
     }
 
     void Start()
@@ -94,7 +107,7 @@ public class Projectile : MonoBehaviour
     }
 
     /// <summary>
-    /// Instantiates explosion effect (if assigned) and destroys the projectile.
+    /// Instantiates explosion effect (if assigned) and detaches the smoke trail before destroying the projectile.
     /// Called on first collision.
     /// </summary>
     private void Explode()
@@ -109,7 +122,33 @@ public class Projectile : MonoBehaviour
             );
         }
 
+        // Detach and fade out the smoke trail
+        DetachAndFadeTrail();
+
         // Remove projectile from scene
         Destroy(gameObject);
+    }
+
+    /// <summary>
+    /// Detaches the SmokeTrail child object from the projectile,
+    /// stops emitting new trail points, and destroys the trail after a delay.
+    /// This allows the trail to remain visible in the air and fade naturally.
+    /// </summary>
+    private void DetachAndFadeTrail()
+    {
+        if (trailObject == null) return;
+
+        // Detach the trail from the projectile so it stays in the world
+        trailObject.SetParent(null);
+
+        // Stop generating new trail points
+        TrailRenderer trailRenderer = trailObject.GetComponent<TrailRenderer>();
+        if (trailRenderer != null)
+        {
+            trailRenderer.emitting = false;
+        }
+
+        // Destroy the trail object after the specified delay
+        Destroy(trailObject.gameObject, trailCleanupDelay);
     }
 }
