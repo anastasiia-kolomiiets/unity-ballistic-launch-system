@@ -7,6 +7,23 @@ using UnityEngine;
 /// </summary>
 public static class BallisticCalculator
 {
+    public static float gravity = Physics.gravity.magnitude;
+
+    public static BallisticResult CalculateLaunchAngles(Vector3 start,
+        Vector3 target,
+        float launchSpeed,
+        AirResistanceSettings airResistanceSettings)
+    {
+        if (!airResistanceSettings.useAirDrag)
+        {
+            return SolveBallisticArc(start, target, launchSpeed);
+        }
+        else
+        {
+            return SolveBallisticArcWithDrag(start, target, launchSpeed, airResistanceSettings);
+        }
+    }
+
     /// <summary>
     /// Calculates launch angles (yaw and pitch) assuming no air resistance (vacuum / analytical solution).
     /// Uses the standard low-angle ballistic formula (minus root solution).
@@ -14,13 +31,11 @@ public static class BallisticCalculator
     /// <param name="start">Starting position of the projectile</param>
     /// <param name="target">Target position</param>
     /// <param name="speed">Initial projectile speed (m/s)</param>
-    /// <param name="gravity">Gravitational acceleration magnitude (usually 9.81 m/s²)</param>
     /// <returns>BallisticResult with yaw, pitch and success flag</returns>
-    public static BallisticResult SolveBallisticArc(
+    private static BallisticResult SolveBallisticArc(
         Vector3 start,
         Vector3 target,
-        float speed,
-        float gravity)
+        float speed)
     {
         BallisticResult result = new BallisticResult { success = false, yaw = 0f, pitch = 0f };
 
@@ -40,10 +55,9 @@ public static class BallisticCalculator
         }
 
         float v2 = speed * speed;
-        float g = gravity;
 
         // Discriminant of the quadratic equation for tan(theta)
-        float discriminant = v2 * v2 - g * (g * dxz * dxz + 2 * dy * v2);
+        float discriminant = v2 * v2 - gravity * (gravity * dxz * dxz + 2 * dy * v2);
 
         if (discriminant < 0)
         {
@@ -52,7 +66,7 @@ public static class BallisticCalculator
 
         // Low trajectory solution (more stable, usually preferred)
         float sqrt = Mathf.Sqrt(discriminant);
-        result.pitch = Mathf.Atan((v2 - sqrt) / (g * dxz)) * Mathf.Rad2Deg;
+        result.pitch = Mathf.Atan((v2 - sqrt) / (gravity * dxz)) * Mathf.Rad2Deg;
         result.success = true;
 
         return result;
@@ -65,16 +79,14 @@ public static class BallisticCalculator
     /// <param name="start">Launch position</param>
     /// <param name="target">Target position</param>
     /// <param name="speed">Muzzle velocity (m/s)</param>
-    /// <param name="gravity">Gravity magnitude (m/s²)</param>
     /// <param name="airResistanceSettings">All projectile physics parameters including air resistance, mass, and drag.</param>
     /// <param name="maxIterations">Maximum secant method iterations</param>
     /// <param name="tolerance">Acceptable vertical error at target distance (meters)</param>
     /// <returns>BallisticResult with computed yaw, pitch and success flag</returns>
-    public static BallisticResult SolveBallisticArcWithDrag(
+    private static BallisticResult SolveBallisticArcWithDrag(
         Vector3 start,
         Vector3 target,
         float speed,
-        float gravity,
         AirResistanceSettings airResistanceSettings,
         int maxIterations = 35,
         float tolerance = 0.08f)
@@ -98,12 +110,11 @@ public static class BallisticCalculator
         float noDragPitch = 45f;
         {
             float v2 = speed * speed;
-            float g = gravity;
-            float discriminant = v2 * v2 - g * (g * dxz * dxz + 2 * dy * v2);
+            float discriminant = v2 * v2 - gravity * (gravity * dxz * dxz + 2 * dy * v2);
             if (discriminant >= 0)
             {
                 float sqrtD = Mathf.Sqrt(discriminant);
-                noDragPitch = Mathf.Atan((v2 - sqrtD) / (g * dxz)) * Mathf.Rad2Deg;
+                noDragPitch = Mathf.Atan((v2 - sqrtD) / (gravity * dxz)) * Mathf.Rad2Deg;
             }
         }
 
@@ -112,8 +123,8 @@ public static class BallisticCalculator
 
         for (int i = 0; i < maxIterations; i++)
         {
-            float y0 = SimulateHitHeight(dxz, speed, p0, gravity, airResistanceSettings);
-            float y1 = SimulateHitHeight(dxz, speed, p1, gravity, airResistanceSettings);
+            float y0 = SimulateHitHeight(dxz, speed, p0, airResistanceSettings);
+            float y1 = SimulateHitHeight(dxz, speed, p1, airResistanceSettings);
 
             if (y0 < -500f || y1 < -500f) return result; // cannot reach
 
@@ -142,7 +153,7 @@ public static class BallisticCalculator
         }
 
         // Final validation with slightly relaxed tolerance
-        float finalY = SimulateHitHeight(dxz, speed, p1, gravity, airResistanceSettings);
+        float finalY = SimulateHitHeight(dxz, speed, p1, airResistanceSettings);
         if (Mathf.Abs(finalY - dy) < 2f)
         {
             result.pitch = p1;
@@ -156,7 +167,7 @@ public static class BallisticCalculator
     /// Forward Euler integration of projectile motion with quadratic drag and gravity.
     /// Returns interpolated height when horizontal distance reaches dxz.
     /// </summary>
-    private static float SimulateHitHeight(float dxz, float speed, float pitchDeg, float g, AirResistanceSettings airResistanceSettings)
+    private static float SimulateHitHeight(float dxz, float speed, float pitchDeg, AirResistanceSettings airResistanceSettings)
     {
         float pitchRad = pitchDeg * Mathf.Deg2Rad;
         float vx = speed * Mathf.Cos(pitchRad);
@@ -181,7 +192,7 @@ public static class BallisticCalculator
 
             float dragMag = 0.5f * airResistanceSettings.airDensity * airResistanceSettings.dragCoefficient * airResistanceSettings.crossSectionArea * speedSq;
             float ax = -(vx / speedCur) * (dragMag / airResistanceSettings.mass);
-            float ay = -(vy / speedCur) * (dragMag / airResistanceSettings.mass) - g;
+            float ay = -(vy / speedCur) * (dragMag / airResistanceSettings.mass) - gravity;
 
             vx += ax * dt;
             vy += ay * dt;
@@ -264,14 +275,14 @@ public static class BallisticCalculator
     /// <returns>
     /// The position where the drone should release the payload.
     /// </returns>
-    public static Vector3 CalculateDropReleasePoint(
+    private static Vector3 CalculateDropReleasePoint(
         Vector3 dronePosition,
         Vector3 targetPosition,
         Vector3 droneHorizontalVelocity)
     {
         float height = dronePosition.y - targetPosition.y;
 
-        float fallTime = Mathf.Sqrt(2f * height / Mathf.Abs(Physics.gravity.y));
+        float fallTime = Mathf.Sqrt(2f * height / gravity);
         Vector3 leadOffset = droneHorizontalVelocity * fallTime;
 
         Vector3 releasePoint = targetPosition - leadOffset;
@@ -290,7 +301,7 @@ public static class BallisticCalculator
     /// <param name="droneHorizontalVelocity">Drone's horizontal velocity vector at release.</param>
     /// <param name="airSettings">Air resistance settings (Cd, mass, area, density).</param>
     /// <returns>World-space release point at the same height as the drone.</returns>
-    public static Vector3 CalculateDropReleasePointWithDrag(
+    private static Vector3 CalculateDropReleasePointWithDrag(
         Vector3 dronePosition,
         Vector3 targetPosition,
         Vector3 droneHorizontalVelocity,
@@ -344,7 +355,6 @@ public static class BallisticCalculator
         float y = height;
 
         float dt = 0.004f;                   // integration step (high precision)
-        float g = Mathf.Abs(Physics.gravity.y);
 
         float prevX = 0f;
         float prevY = height;
@@ -366,7 +376,7 @@ public static class BallisticCalculator
 
             // Acceleration components
             float ax = -(vx / speed) * (dragMag / airSettings.mass);
-            float ay = -(vy / speed) * (dragMag / airSettings.mass) - g;
+            float ay = -(vy / speed) * (dragMag / airSettings.mass) - gravity;
 
             // Semi-implicit Euler integration (velocity first, then position)
             vx += ax * dt;

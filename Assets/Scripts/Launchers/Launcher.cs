@@ -36,17 +36,7 @@ public class Launcher : MonoBehaviour
     {
         Vector3 start = firePoint.position;
 
-        BallisticResult result;
-
-        // Choose calculation method depending on air drag setting
-        if (!airResistanceSettings.useAirDrag)
-        {
-            result = BallisticCalculator.SolveBallisticArc(start, end, launchSpeed, Physics.gravity.magnitude);
-        }
-        else
-        {
-            result = BallisticCalculator.SolveBallisticArcWithDrag(start, end, launchSpeed, Physics.gravity.magnitude, airResistanceSettings);
-        }
+        BallisticResult result = BallisticCalculator.CalculateLaunchAngles(start, end, launchSpeed, airResistanceSettings);;
 
         if (!result.success)
         {
