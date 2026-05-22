@@ -231,8 +231,10 @@ public static class BallisticCalculator
         if (height <= 0.01f)
             return new ReleaseResult { success = false, releasePoint = startPosition, timeToRelease = 0f };
 
-        Vector3 direction = (targetPosition - startPosition).normalized;
-        direction.y = 0f;
+        Vector3 direction = targetPosition - startPosition;
+        direction.y = 0f;          // Ignore height
+        direction.Normalize();     // Normalize horizontal vector
+
         if (direction.sqrMagnitude < 0.01f)
             direction = Vector3.forward;
 
