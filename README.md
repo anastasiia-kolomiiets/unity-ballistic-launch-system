@@ -49,7 +49,6 @@ unity-ballistic-launch-system/
 ├── My project.slnx          # Visual Studio solution
 ├── .gitignore
 └── README.md
-text---
 ```
 
 ## 🚀 How to Run
