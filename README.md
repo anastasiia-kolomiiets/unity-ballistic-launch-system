@@ -15,8 +15,11 @@ The main goal is to demonstrate realistic ballistic physics, including gravity, 
 
 ## ✨ Key Features
 
-- Automatic calculation of **horizontal (azimuth)** and **vertical (elevation)** launch angles
+- Support for different modes: static launcher and dynamic drone
+- Automatic calculation of **horizontal (azimuth)** and **vertical (elevation)** launch angles in Launcher mode
+- Automatic calculation of **release point** and **time to release** in Drone mode
 - Real-time projectile simulation using Unity Physics
+- User-controlled camera for better trajectory viewing
 - Support for different initial velocities and gravitational conditions
 - Clean and modular C# architecture
 - Ready for integration into games, simulations, or educational tools
@@ -33,6 +36,7 @@ The main goal is to demonstrate realistic ballistic physics, including gravity, 
 ---
 
 ## 📁 Project Structure
+```
 unity-ballistic-launch-system/
 ├── Assets/                  # Main Unity folder
 │   ├── Scripts/             # C# scripts (BallisticCalculator.cs, Launcher.cs, etc.)
@@ -46,6 +50,7 @@ unity-ballistic-launch-system/
 ├── .gitignore
 └── README.md
 text---
+```
 
 ## 🚀 How to Run
 
@@ -73,28 +78,28 @@ text---
 
 ## How It Works
 
-1. User sets initial position (launcher) and target position, initial speed and air resistance data.
-2. The system solves the ballistic equations to find the required vertical and horizontal angles
-3. A projectile is instantiated with the calculated velocity vector
+1. User sets mode, initial position and target position, initial speed and air resistance data.
+2. The system solves the ballistic equations to find the required angles or release information.
+3. A projectile is instantiated with the calculated velocity vector.
 4. Unity Physics or custom physics mechanic takes over — simulating gravity, drag (if enabled), and collision.
 
 ---
 
 ## Roadmap (Planned Improvements)
 
-- Trajectory prediction line (dashed path or smoke visualization)
-- Still or moving drone simulation
+- Trajectory prediction line (dashed path or smoke visualization) ✅
+- Still or moving drone simulation ✅
 
 ---
 
 ## Screenshots
 <div align="center">
   
-### Main Interface
-<img width="1314" height="880" alt="Знімок екрана 2026-03-26 170756" src="https://github.com/user-attachments/assets/0c458897-12a3-42ec-8811-33f014f73f55" />
+### Launcher mode
+<img width="1418" height="884" alt="Screenshot 2026-05-25 at 11 17 06" src="https://github.com/user-attachments/assets/b642b49b-3415-4ea1-be2e-371aa2ce5ec7" />
   
-### Explotion effect
-<img width="1314" height="878" alt="Знімок екрана 2026-03-26 170857" src="https://github.com/user-attachments/assets/08075924-fbbd-4615-8399-a91b404c2560" />
+### Drone mode
+<img width="1415" height="884" alt="Screenshot 2026-05-25 at 11 18 14" src="https://github.com/user-attachments/assets/84678ee7-fd6e-4dde-b560-67dbc8f581b3" />
 
 </div>
 
