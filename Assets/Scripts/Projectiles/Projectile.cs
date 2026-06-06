@@ -112,15 +112,15 @@ public class Projectile : MonoBehaviour
     /// </summary>
     private void Explode()
     {
-        if (explosionPrefab != null)
-        {
-            // Spawn explosion at current position with default rotation
-            Instantiate(
-                explosionPrefab,
-                transform.position,
-                Quaternion.identity
-            );
-        }
+        // if (explosionPrefab != null)
+        // {
+        //     // Spawn explosion at current position with default rotation
+        //     Instantiate(
+        //         explosionPrefab,
+        //         transform.position,
+        //         Quaternion.identity
+        //     );
+        // }
 
         // Detach and fade out the smoke trail
         DetachAndFadeTrail();
